@@ -1,0 +1,107 @@
+A robust pipeline for text-to-DNA encoding, Transformer-based error detection, sequence correction, and DNA-to-text decoding, optimized for biological DNA sequence constraints.
+
+## Project Structure
+```
+dna-encoding-decoding/
+├── README.md           # Project documentation
+├── requirements.txt    # Dependency list
+├── src/                # Source code directory
+│   ├── __init__.py     # Package initialization
+│   ├── encode.py       # Text-to-DNA encoding module
+│   ├── decode.py       # DNA error correction & decoding module
+│   ├── transformer.py  # Transformer model for error detection
+│   └── utils/          # Utility functions
+│       ├── __init__.py
+│       └── data_handle.py  # Data processing utilities
+├── data/               # Data directory (input/output files)
+│   ├── input_text.txt  # Raw text to encode (user-provided)
+│   └── codex.txt       # Binary-to-DNA encoding dictionary (generated)
+└── models/             # Model directory (trained weights)
+```
+
+## Features
+1. **Constrained DNA Encoding**: Converts text to binary and maps to valid DNA sequences with controlled GC content (40-60%), limited homopolymers (≤4), and minimum edit distance (≥3) between codes.
+2. **Transformer Error Detection**: Identifies insertions, deletions, and substitutions in DNA sequences using a hybrid 1D CNN-Transformer model.
+3. **Dual-Mode Error Correction**: Fixes errors via strict fuzzy alignment (precise correction) and loose base insertion/deletion (ambiguous error resolution).
+4. **Reliable DNA Decoding**: Reverses encoding by mapping corrected DNA back to binary and reconstructing the original text.
+
+## Prerequisites
+- Python 3.8+
+- PyTorch 2.0.0+
+- NumPy, Matplotlib, python-Levenshtein
+
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/dna-encoding-decoding.git
+   cd dna-encoding-decoding
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Usage
+### 1. Encode Text to DNA
+Convert your input text to valid DNA sequences and generate the encoding dictionary:
+```bash
+cd src
+python encode.py
+```
+- **Input**: `data/input_text.txt` (replace with your UTF-8 text file)
+- **Generated Outputs**:
+  - `data/codex.txt`: Binary-to-DNA mapping dictionary
+  - `data/pome_dna.txt`: Encoded DNA sequences (intermediate file)
+
+### 2. Train the Error Detection Model
+Train the Transformer model to detect DNA sequence errors:
+```bash
+python transformer.py
+```
+- **Generated Outputs**:
+  - `models/best_model_main.pth`: Best-performing trained model weights
+  - `models/training_curves.png`: Training loss/accuracy visualization
+
+### 3. Correct Errors & Decode DNA to Text
+Detect errors in encoded DNA, correct them, and decode back to readable text:
+```bash
+python decode.py
+```
+- **Input**: `data/pome_dna.txt` (encoded DNA sequences from Step 1)
+- **Generated Outputs**:
+  - `data/prediction_results.txt`: Error detection results (true/predicted labels)
+  - `data/recovered_Text1.txt`: Final decoded and recovered text
+
+## Key Parameters
+| Module | Parameter | Description | Default |
+|--------|-----------|-------------|---------|
+| Encoding | `gc_range` | Acceptable GC content range for DNA sequences | (0.4, 0.6) |
+| Encoding | `max_homopolymer` | Maximum allowed homopolymer run length | 4 |
+| Encoding | `min_edit_distance` | Minimum edit distance between DNA codes | 3 |
+| Transformer | `d_model` | Model dimension for feature extraction | 128 |
+| Transformer | `nhead` | Number of multi-head attention heads | 4 |
+| Correction | `windowsize` | Sliding window size for error detection | 3 |
+| Correction | `max_iter` | Maximum correction iterations per sequence | 100 |
+
+## Technical Details
+### Encoding Constraints
+- Filters invalid DNA sequences (abnormal GC content, long homopolymers, tandem repeats)
+- Generates unique DNA codes with sufficient edit distance for error resilience
+- Preserves text integrity via binary-to-DNA mapping
+
+### Error Detection Model
+- Hybrid architecture: 1D CNN for local feature extraction + Transformer for global sequence understanding
+- Trained on simulated errors (substitutions: 4%, deletions/insertions: 0.4% each)
+- Outputs binary classification (error-free vs. error-containing sequences)
+
+### Error Correction
+- **Strict Mode**: Fuzzy alignment with closest valid DNA code matching for precise error fixing
+- **Loose Mode**: Tests 1-2 base insertions/deletions to resolve ambiguous errors
+- Iterative correction until no errors are detected or max iterations reached
+
+## Notes
+- **Intermediate Files**: Files like `pome_dna.txt`, `prediction_results.txt`, and trained model weights are generated during execution and not included in the repository.
+- **Directory Setup**: Ensure `data/` and `models/` directories exist before running scripts (create manually if missing).
+- **Hardware**: GPU acceleration (CUDA) is recommended for fast model training; CPU fallback is available.
+- **Input Format**: Input text must be UTF-8 encoded for accurate conversion.
+
